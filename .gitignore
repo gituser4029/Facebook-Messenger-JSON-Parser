@@ -129,3 +129,5 @@ dmypy.json
 .pyre/
 /message_1.json
 /messenger_stats.txt
+/.idea/encodings.xml
+/.idea/workspace.xml

@@ -112,8 +112,12 @@ def main(messenger_chat):
         f.write('\nThe 50 Most Common Words:\n')
         words = remove_common(messenger_chat['words_counter']).most_common(50)
         for num in range(len(words)):
-            f.write('\t{0}. {1} ({2}x)'.format(
-                num + 1, words[num][0], words[num][1]))
+            try:
+                f.write('\t{0}. {1} ({2}x)'.format(
+                    num + 1, words[num][0], words[num][1]))
+            except UnicodeEncodeError:
+                f.write('\t{0}. {1} ({2}x)'.format(
+                    num + 1, words[num][0].encode('utf-8'), words[num][1]))
 
         # User Stats
         f.write('\n\nStats by Member:')
@@ -145,17 +149,26 @@ def main(messenger_chat):
             f.write('\nThe 25 Most Common Words:\n')
             words = remove_common(individual['words_counter']).most_common(25)
             for num in range(len(words)):
-                f.write('\t{0}. {1} ({2}x)'.format(
-                    num + 1, words[num][0], words[num][1]))
+                try:
+                    f.write('\t{0}. {1} ({2}x)'.format(
+                        num + 1, words[num][0], words[num][1]))
+                except UnicodeEncodeError:
+                    f.write('\t{0}. {1} ({2}x)'.format(
+                        num + 1, words[num][0].encode('utf-8'), words[num][1]))
     print('Wrote Results to messenger_stats.txt. Please check that file for details!\n\nThanks for using my program :)!')
 
 
 def remove_common(counter):
-    # Common useless messenger words - probably plenty to filter out more :)
-    common_words = ['A', 'An', 'The', 'I', 'To', 'And', 'That', 'Sent', 'Is', 'Photo', 'You', 'Of', 'Like', 'It', 'It\'s', 'I\'m', 'Its',
-                    'In', 'My', 'This', 'For', 'M', 'We', 'At', 'Was', 'On', 'So', 'But', 'Just', 'Be', 'Good', 'If', 'Ll', 'Attachment', 'Ð', 'He', 'She', 'Me']
-    for word in common_words:
-        del counter[word]
+    # Top 10000 common english words are removed from messeenger chat statistics on top 25 words
+    #with open('google-10000-english.txt') as f:
+    #    common_words = list(map(str.strip, f.readlines()))
+    #    print(common_words)
+    extra_exceptions = ['I\'m', 'It\'s']
+    with open('google-10000-english-usa-no-swears-short.txt') as f:
+        common_words = list(map(str.strip, f.readlines()))
+        #print(common_words)
+        for word in common_words:
+            del counter[word.capitalize()]
     return counter
 
 
@@ -165,6 +178,18 @@ def parse_words(message):
         user = messenger_chat['members'][message['sender_name']]
         #words = re.findall(r'\w+', message['content'])
         words = message['content']
+
+        #TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
+        if 'sent an attachment' in words:
+            parse_links(message)
+            return False # skip or TODO notify share
+        elif 'sent a photo' in words:
+            parse_media(message)
+            return False # TODO notify photo
+        elif 'sent a video' in words:
+            parse_media(message)
+            return False # TODO notify video
+
         words = [word.capitalize() for word in words.split()]
         messenger_chat['words_counter'].update(words)
         messenger_chat['word_count'] += len(words)
