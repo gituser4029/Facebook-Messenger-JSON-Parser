@@ -16,7 +16,7 @@ Please see the README.md file for help in running this file.
 
 
 
-import re #regex
+#import re #regex
 import json
 from collections import Counter
 
@@ -121,8 +121,13 @@ def main(messenger_chat):
 
         # User Stats
         f.write('\n\nStats by Member:')
+        print('N-Word Count(s)! Lets see if you are being naughty!! >:(')
         for user in messenger_chat['members']:
             individual = messenger_chat['members'][user]
+
+            # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them, I promise I don't mean them
+
+            print(f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>3} Soft {individual['words_counter']['Nigger']:>3} Hard {individual['words_counter']['Nig']:>3} Cut-off {individual['words_counter']['Niggar']:>3} Weird Format O_o")
             f.write('\n\n{0}\n\n'.format(user))
             f.write('Total Messages: {0}\n'.format(
                 individual['total_messages']))
@@ -159,13 +164,14 @@ def main(messenger_chat):
 
 
 def remove_common(counter):
+    #TODO fix remove common it removes stuff it shouldn't - maybe smaller curated list
     # Top 10000 common english words are removed from messeenger chat statistics on top 25 words
     #with open('google-10000-english.txt') as f:
     #    common_words = list(map(str.strip, f.readlines()))
     #    print(common_words)
-    extra_exceptions = ['I\'m', 'It\'s']
+    extra_exceptions = ['I\'m', 'It\'s', 'Don\'t', 'That\'s', 'Should', 'About']
     with open('google-10000-english-usa-no-swears-short.txt') as f:
-        common_words = list(map(str.strip, f.readlines()))
+        common_words = list(map(str.strip, f.readlines())) + extra_exceptions
         #print(common_words)
         for word in common_words:
             del counter[word.capitalize()]

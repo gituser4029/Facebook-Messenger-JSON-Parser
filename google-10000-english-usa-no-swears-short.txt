@@ -201,8 +201,6 @@ john
 main
 call
 non
-k
-y
 why
 cd
 save
@@ -855,7 +853,6 @@ pin
 raw
 gnu
 jeff
-ben
 lane
 kill
 aol
