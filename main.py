@@ -15,6 +15,15 @@ Please see the README.md file for help in running this file.
 '''
 
 # TODO readme file :)
+# TODO check through folder(s) for message.json and potentially other files if can support it
+# TODO nickname check/parse/indication
+# TODO missing member indication(s)
+# TODO fix gif_counts for new messenger format for new(er) chats
+# TODO fix word counts and filtered word list(s)
+# TODO fstring formatting
+# TODO csv formatting :)))
+# TODO graphical / data analysis
+# TODO TODO TODO :P
 
 # import re #regex
 import json
@@ -26,7 +35,7 @@ def main(messenger_chat):
 
     try:
         print('\nPlease wait while the document loads.')
-        with open('message_1.json') as chat:
+        with open('message_1.json') as chat: #TODO setup to load either different file names or multiple files in different folders
             file = json.load(chat)
         print('File has finished loading. Parsing data.\n')
     except FileNotFoundError:
