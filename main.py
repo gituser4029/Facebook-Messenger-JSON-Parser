@@ -20,32 +20,6 @@ import re #regex
 import json
 from collections import Counter
 
-''' messages stuff 
-    "messages": [
-    {
-      "sender_name": "Alexander Romios",
-      "timestamp_ms": 1566414701429,
-      "content": "Bruh",
-      "type": "Generic"
-    },
-    {
-      "sender_name": "Tyler Batistic",
-      "timestamp_ms": 1566414679970,
-      "content": "Nigga meme",
-      "type": "Generic"
-    },
-    {
-      "sender_name": "Tyler Batistic",
-      "timestamp_ms": 1566414674739,
-      "photos": [
-        {
-          "uri": "messages/inbox/JammyJimmysJauntyJazzEnsemble_lIGHrATAlA/photos/69245220_1583140321820673_4997171011259465728_n_1583140318487340.jpg",
-          "creation_timestamp": 1566414674
-        }
-      ],
-      "type": "Generic"
-    },
-'''
 
 def main(messenger_chat):
     print('Nate\'s Messenger (JSON) Chat Parser - Version 1.0.0')
