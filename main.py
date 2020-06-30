@@ -55,38 +55,30 @@ def main(messenger_chat):
 
     # Iterate through all messages and parse data
     for message in messages:
-        user = message['sender_name']
-        date = message['timestamp_ms']
+
         if 'content' in message:
-            content = message['content']
+            parse_words(message)
+
+        #TODO fix reaction parsing
         if 'reactions' in message:
             # Parse through the reactions
-            parse_reactions(message)
+            #parse_reactions(message)
+            pass
             
         # Increase User's total message count
         try:
-            messenger_chat['members'][user]['total_messages'] += 1
+            messenger_chat['members'][message['sender_name']]['total_messages'] += 1
         except KeyError:
-            print(f"Error! Discovered Missing User! (User {user})")
-            continue #Skip Loop for this Individual
+            if message['sender_name'] not in messenger_chat['missing_members']:
+                print(f"Discovered person who left chat! {message['sender_name']}")
+                messenger_chat['missing_members'].append(message['sender_name'])
+            continue
 
-#below here untouched
-        # Parse through the words
-        if not parse_words(payload):
-            # If the message is not None/empty, fix the mesage with no linebreak (</br>) statements
-            if not content[1].div.contents[1]:
-                message = ''
-                for item in content[1].div.contents[1].contents:
-                    if isinstance(item, str):
-                        message += item
-                payload['message'] = message
-                if not parse_words(payload):
-                    print("A Secondary Parse Failed... :(")
-        
+        #TODO check media / photos
         # Parse through for images and videos
-        parse_media(payload, message)
+        #parse_media(payload, message)
         # Find and parse links send in the chat
-        parse_links(payload, message)
+        #parse_links(payload, message)
 
     print("Done! Analysis was successful!")
     print('\nWriting to file anaylsis results...')
@@ -97,7 +89,7 @@ def main(messenger_chat):
         f.write('File Generated Using Nate\'s Messenger Parser (https://github.com/artyomos/messenger-parser)\nVersion 1.0.0\n\n')
 
         # Group Chat Title
-        f.write('Messenger Chat: {0}\n\n'.format(currentTitle))
+        f.write('Messenger Chat: {0}\n\n'.format(current_title))
 
         # Stats
         f.write('Total Messages: {0}\n'.format(
@@ -159,32 +151,36 @@ def main(messenger_chat):
 
 
 def remove_common(counter):
-    # Common useless messenger words
-    common_words = ['A', 'An', 'The', 'I', 'To', 'And', 'That', 'Sent', 'Is', 'Photo', 'S', 'T', 'You', 'Of', 'Like', 'It',
-                    'In', 'My', 'This', 'For', 'M', 'We', 'At', 'Was', 'On', 'So', 'But', 'Just', 'Be', 'Good', 'If', 'Ll', 'Attachment']
+    # Common useless messenger words - probably plenty to filter out more :)
+    common_words = ['A', 'An', 'The', 'I', 'To', 'And', 'That', 'Sent', 'Is', 'Photo', 'You', 'Of', 'Like', 'It', 'It\'s', 'I\'m', 'Its',
+                    'In', 'My', 'This', 'For', 'M', 'We', 'At', 'Was', 'On', 'So', 'But', 'Just', 'Be', 'Good', 'If', 'Ll', 'Attachment', 'Ð', 'He', 'She', 'Me']
     for word in common_words:
         del counter[word]
     return counter
 
 
-def parse_words(message_list):
+def parse_words(message):
+    #TODO fix parsing of X sent (photo/attachmentdeo/link etc)
     try:
-        words = re.findall(r'\w+', payload['message'])
-        words = [word.title() for word in words]
+        user = messenger_chat['members'][message['sender_name']]
+        #words = re.findall(r'\w+', message['content'])
+        words = message['content']
+        words = [word.capitalize() for word in words.split()]
         messenger_chat['words_counter'].update(words)
         messenger_chat['word_count'] += len(words)
         messenger_chat['character_count'] += len(''.join(words))
-        user = messenger_chat['members'][payload['user']]
         user['words_counter'].update(words)
         user['word_count'] += len(words)
         user['character_count'] += len(''.join(words))
     except TypeError:
-        if payload['message'] is not None:
-            print('Error: TimeStamp of {0}'.format(payload['date']))
-            print('Message: "{0}"'.format(payload['message']))
+        if message['content'] is not None:
+            print('Error: TimeStamp of {0}'.format(message['timestamp_ms']))
+            print('Message: "{0}"'.format(message['content']))
         return False
     except KeyError:
-        print("Discovered person who left chat!")
+        if message['sender_name'] not in messenger_chat['missing_members']:
+            print(f"Discovered person who left chat! {message['sender_name']}")
+            messenger_chat['missing_members'].append(message['sender_name'])
         return False
     return True
 
@@ -293,6 +289,7 @@ messenger_chat = {
     },
     'words_counter': Counter(),
     'members': {},
+    'missing_members': [],
 }
 
 # Runs the file
