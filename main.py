@@ -24,18 +24,17 @@ Please see the README.md file for help in running this file.
 # TODO graphical / data analysis
 # TODO TODO TODO :P
 
-# import re #regex
 import json
 from collections import Counter
 
 
 def main(messenger_chat):
-    print('Nate\'s Messenger (JSON) Chat Parser - Version 1.1.0')
+    print('Nate\'s Messenger (JSON) Chat Parser - Version 1.1.0')  # uwu
 
     try:
         print('\nPlease wait while the document loads.')
-        with open(
-                'message_1.json') as chat:  # TODO setup to load either different file names or multiple files in different folders
+        # TODO setup to load either different file names or multiple files in different folders
+        with open('message_1.json') as chat:
             file = json.load(chat)
         print('File has finished loading. Parsing data.\n')
     except FileNotFoundError:
@@ -66,13 +65,13 @@ def main(messenger_chat):
         parse_chat(message)
 
     print("Done! Analysis was successful!")
-    print('\nWriting to file anaylsis results...')
+    print('\nWriting to file analysis results...')
 
     # Give a usable list in console and write to file
     with open(f"messenger_stats_{messenger_chat['title'].replace(' ', '_')}.txt", 'w+', encoding='utf-8')  as f:
         # Header
-        f.write(
-            'File Generated Using Nate\'s Messenger Parser (https://github.com/artyomos/Facebook-Messenger-JSON-Parser)\nVersion 1.1.0\n\n')
+        f.write('File Generated Using Nate\'s Messenger Parser (https://github.com/'
+                'artyomos/Facebook-Messenger-JSON-Parser)\nVersion 1.1.0\n\n')
 
         # Group Chat Title
         f.write('Messenger Chat: {0}\n\n'.format(messenger_chat['title']))
@@ -111,9 +110,9 @@ def main(messenger_chat):
         for user in messenger_chat['members']:
             individual = messenger_chat['members'][user]
 
-            # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them, I promise I don't mean them
-            # TODO https://pypi.org/project/profanity-check/
-            # regex whatever it is for [*]gga (and exclude ni -   of course) to see all the hilarious -gga's we've come up with
+            # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them,
+            # I promise I don't mean them TODO https://pypi.org/project/profanity-check/
+            #  regex whatever it is for [*]gga (and exclude ni -   of course)
             print(
                 f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>4} Soft {individual['words_counter']['Nigger']:>4} Hard {individual['words_counter']['Nig']:>4} Cut-off {individual['words_counter']['Niggar']:>4} Weird Format O_o")
 
@@ -159,11 +158,18 @@ def main(messenger_chat):
 
 
 def remove_common(counter):
+    """
+    Given a counter remove common words
+    :param counter:Counter Counter containing words used in the chat
+    :return: counter Returns the sanitized Counter
+    """
     # TODO fix remove common it removes stuff it shouldn't - maybe smaller curated list
     # Top 10000 common english words are removed from messeenger chat statistics on top 25 words
     # with open('google-10000-english.txt') as f:
     #    common_words = list(map(str.strip, f.readlines()))
     #    print(common_words)
+
+    # Extra list to include any other words you would like to filter
     extra_exceptions = ['I\'m', 'It\'s', 'Don\'t', 'That\'s', 'Should', 'About']
     with open('google-10000-english-usa-no-swears-short.txt') as f:
         common_words = list(map(str.strip, f.readlines())) + extra_exceptions
@@ -206,112 +212,135 @@ def parse_chat(message):
         # TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
 
         if 'share' in message.keys():
-            parse_links(message)
+            parse_links(message, user)
         elif 'photos' in message.keys():
-            parse_photos(message)
+            parse_photos(message, user)
         elif 'videos' in message.keys():
-            parse_videos(message)
+            parse_videos(message, user)
         elif 'audio_files' in message.keys():
-            parse_audio(message)
+            parse_audio(message, user)
 
         if 'reactions' in message.keys():
-            parse_reactions(message)
+            parse_reactions(message, user)
 
         if content:
             words = [word.capitalize() for word in words.split()]
+            word_count = len(words)
+            char_count = len(''.join(words))
             messenger_chat['words_counter'].update(words)
-            messenger_chat['word_count'] += word_count := len(words)
-            messenger_chat['character_count'] += char_count := len(''.join(words))
+            messenger_chat['word_count'] += word_count
+            messenger_chat['character_count'] += char_count
             user['words_counter'].update(words)
             user['word_count'] += word_count
             user['character_count'] += char_count
     except TypeError:
         print(f"TypeError for Message: {message['timestamp_ms']}")
-        if message['content'] is not None:
+        if 'content' in message.keys():
             print(f"Message Content: {message['content']}")
         return False
     except KeyError:
+        # Skip Missing Members if already found
+        if message['sender_name'] not in messenger_chat['members'] and message['sender_name'] not in messenger_chat[
+            'missing_members']:
+            print(f"Found a missing user! {message['sender_name']}")
+            messenger_chat['missing_members'].append(message['sender_name'])
+        else:
+            return False
+        # Otherwise describe the problem to console
         print(f"KeyError for Message: {message['timestamp_ms']}")
-        if message['content'] is not None:
-            print(f"Message Content: {message['content']}")
+        # if 'content' in message.keys():
+        #     print(f"Message Content: {message['content']}")
         return False
     return True
 
 
-def parse_reactions(message):
-    user = messenger_chat['members'][message['sender_name']]
+def parse_reactions(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the reactions given and received by the user
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:string String Indicating User ID / Name of the user in the chat
+    """
     reactions = message['reactions']
     messenger_chat['reaction_count']['given'] += len(reactions)
 
     for reaction in reactions:
-        # messenger has broken utf-8 encoding
-        reaction_list = {
-            '\u00f0\u009f\u0091\u008d': '👍',
-            '\u00f0\u009f\u0098\u00a0': '😮',
+        # This line fixes messenger unicode encoding
+        reaction_emoji = reaction['reaction'].encode('latin1').decode('utf-8')
 
-        }
-        reaction_emoji = reaction['reaction'].encode('latin1').decode('utf-8')  # messenger has improperly encoded text
-        # print(reaction_emoji)
-        # update totals for chat
-        messenger_chat['reaction_count']['reaction_counter'].update(
-            reaction_emoji)
+        # Update totals for chat
+        messenger_chat['reaction_count']['reaction_counter'].update(reaction_emoji)
         giving_user = reaction['actor']
-
-        # gives user his reactions
         user['reaction_count']['received'] += 1
         user['reaction_count']['received_counter'].update(reaction_emoji)
-        # gives giver his reactions given
         messenger_chat['members'][giving_user]['reaction_count']['given'] += 1
         messenger_chat['members'][giving_user]['reaction_count']['given_counter'].update(reaction_emoji)
 
 
-def parse_photos(message):
-    user = messenger_chat['members'][message['sender_name']]
+def parse_photos(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the photos sent by the user
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:string String Indicating User ID / Name of the user in the chat
+    """
     for image in message['photos']:
-        image_check = image['uri']  # messenger formatting is shit
+        image_check = image['uri']
         if 'gif' in image_check:
             messenger_chat['gif_count'] += 1
             user['gif_count'] += 1
         else:
             messenger_chat['image_count'] += 1
             user['image_count'] += 1
-    return None
 
 
-def parse_videos(message):
-    user = messenger_chat['members'][message['sender_name']]
+def parse_videos(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the videos sent by the user
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:string String Indicating User ID / Name of the user in the chat
+    """
     for video in message['videos']:
-        videos = video[
-            'uri']  # TODO idk do nothing with it for now (possibly showcase it/create a searchable list of who said what with what vid?)
-        messenger_chat['video_count'] += len(videos)
-        user['video_count'] += len(videos)
-    return None
+        # TODO Potentially create a list of sent video files and where to find it
+        video_file = video['uri']
+        messenger_chat['video_count'] += 1
+        user['video_count'] += 1
 
 
-def parse_audio(message):
-    user = messenger_chat['members'][message['sender_name']]
-    for audio_file in message['audio_files']:
-        audio = audio_file[
-            'uri']  # TODO idk do nothing with it for now (possibly showcase it/create a searchable list of who said what)
+def parse_audio(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the audio files sent by the user
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:string String Indicating User ID / Name of the user in the chat
+    """
+    for audio in message['audio_files']:
+        # TODO Potentially create a list of sent audio files and where to find it
+        audio_file = audio['uri']
         messenger_chat['audio_count'] += 1
         user['audio_count'] += 1
-    return None
 
 
-def parse_links(message):
-    user = messenger_chat['members'][message['sender_name']]
+def parse_links(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the links sent by the user
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:string String Indicating User ID / Name of the user in the chat
+    """
     try:
         links = message['share']['link']
-        if links[:4] == 'http':  # checks if links to web - thats all we care about
+        # Check if link is to the Web
+        if links[:4] == 'http':
             messenger_chat['link_count'] += 1
             user['link_count'] += 1
-    except:
-        pass  # TODO deal with new sharing feature(s)
-    return None
+    except Exception as e:
+        # TODO deal with new sharing feature(s)
+        # Example includes the new share location trips this except block
+        print(f"Error for (Sharing) Message {message['timestamp_ms']}")
 
 
 def parse_participants(participant_list):
-    # Add Member to members
+    """
+    Adds a list of participants in the chat to the (global) chat dictionary
+    :param participant_list:dict Dictionary containing users in the chat
+    """
     for member in participant_list:
         messenger_chat['members'][member['name']] = {
             'total_messages': 0,
@@ -367,5 +396,4 @@ messenger_chat = {
     'missing_members': [],
 }
 
-# Runs the file
 main(messenger_chat)
