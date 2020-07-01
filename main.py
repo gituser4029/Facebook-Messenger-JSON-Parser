@@ -1,4 +1,4 @@
-''' Facebook Messenger Chat Parser Version 1.0.0 - Designed on 06.30.20 by
+''' Facebook Messenger Chat Parser Version 1.1.0 - Designed on 06.30.20 by
  /$$   /$$             /$$                     /$$$$$$$                                                      /$$
 | $$$ | $$            | $$                    | $$__  $$                                                    | $$
 | $$$$| $$  /$$$$$$  /$$$$$$    /$$$$$$       | $$  \ $$ /$$   /$$  /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$
@@ -38,13 +38,15 @@ def main(messenger_chat):
             file = json.load(chat)
         print('File has finished loading. Parsing data.\n')
     except FileNotFoundError:
-        print('Error! File not found. You must give me a message.html file to work with from Facebook Messenger!')
+        print('Error! File not found. You must give me a message_1.json file to '
+              'work with in the same directory as this script!')
         return None
 
     # Get the current title
     messenger_chat['title'] = file['title']
 
     # TODO possibly delve into images / list image amount by person etc?
+    # As in: List of photos/media/videos sent by user by chat O_o
 
     # Tell the user analysis has begun
     print(f"Performing analysis on {messenger_chat['title']}...")
@@ -60,23 +62,7 @@ def main(messenger_chat):
 
     # Iterate through all messages and parse data
     for message in messages:
-        # checks for words, images, links, etc
-        parse_words(message)
-
-        # Increase User's total message count
-        try:
-            messenger_chat['members'][message['sender_name']]['total_messages'] += 1
-        except KeyError:
-            if message['sender_name'] not in messenger_chat['missing_members']:
-                print(f"Discovered person who left chat! {message['sender_name']}")
-                messenger_chat['missing_members'].append(message['sender_name'])
-            continue
-
-        # TODO check media / photos
-        # Parse through for images and videos
-        # parse_media(payload, message)
-        # Find and parse links send in the chat
-        # parse_links(payload, message)
+        parse_chat(message)
 
     print("Done! Analysis was successful!")
     print('\nWriting to file anaylsis results...')
@@ -186,12 +172,13 @@ def remove_common(counter):
     return counter
 
 
-def parse_words(message):
+def parse_chat(message):
     # TODO fix parsing of X sent (photo/attachmentdeo/link etc)
     try:
         content = True  # assume content exists
         user = messenger_chat['members'][message['sender_name']]
-        # words = re.findall(r'\w+', message['content'])
+        user['total_messages'] += 1
+
         try:
             words = message['content'].encode('latin1').decode('utf-8')  # messenger has improperly encoded text
         except KeyError:
