@@ -14,7 +14,6 @@
 Please see the README.md file for help in running this file.
 '''
 
-# TODO readme file :)
 # TODO check through folder(s) for message.json and potentially other files if can support it
 # TODO nickname check/parse/indication
 # TODO missing member indication(s)
