@@ -34,7 +34,8 @@ def main(messenger_chat):
 
     try:
         print('\nPlease wait while the document loads.')
-        with open('message_1.json') as chat: #TODO setup to load either different file names or multiple files in different folders
+        with open(
+                'message_1.json') as chat:  # TODO setup to load either different file names or multiple files in different folders
             file = json.load(chat)
         print('File has finished loading. Parsing data.\n')
     except FileNotFoundError:
@@ -173,32 +174,40 @@ def remove_common(counter):
 
 
 def parse_chat(message):
-    # TODO fix parsing of X sent (photo/attachmentdeo/link etc)
+    """
+    Parses a given message, placing within the (global) chat dictionary the additions this message provides
+    :rtype: boolean
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :return: False if the message cannot be parsed, True otherwise
+    """
     try:
-        content = True  # assume content exists
+        # Assume content exists, attempt to get user and increment his message count
+        content = True
         user = messenger_chat['members'][message['sender_name']]
         user['total_messages'] += 1
+        words = ''
 
-        try:
-            words = message['content'].encode('latin1').decode('utf-8')  # messenger has improperly encoded text
-        except KeyError:
-            words = ''
+        # Fix messenger problems with Unicode Encoding
+        if 'content' in message.keys():
+            # messenger has improperly encoded text - needs to be re-encoded
+            # and then decoded - I don't want to explain its just annoying
+            words = message['content'].encode('latin1').decode('utf-8')
+        else:
             content = False
 
         # if X sent X exists 0 content in message, ignore
         if 'sent an attachment' in words:
-            content = False  # skip or TODO notify share
+            content = False
         elif 'sent a photo' in words:
-            content = False  # TODO notify photo
+            content = False
         elif 'sent a video' in words:
-            content = False  # TODO notify video
+            content = False
+
         # TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
 
-        # Otherwise (Messenger messed wihm prev chats and separated 'sent X' from the actual content into two messages) search for these keys
         if 'share' in message.keys():
             parse_links(message)
-
-        if 'photos' in message.keys():
+        elif 'photos' in message.keys():
             parse_photos(message)
         elif 'videos' in message.keys():
             parse_videos(message)
@@ -211,27 +220,20 @@ def parse_chat(message):
         if content:
             words = [word.capitalize() for word in words.split()]
             messenger_chat['words_counter'].update(words)
-            messenger_chat['word_count'] += len(words)
-            messenger_chat['character_count'] += len(''.join(words))
+            messenger_chat['word_count'] += word_count := len(words)
+            messenger_chat['character_count'] += char_count := len(''.join(words))
             user['words_counter'].update(words)
-            user['word_count'] += len(words)
-            user['character_count'] += len(''.join(words))
-    except TypeError as e:
-        print(message['timestamp_ms'])
-        raise (e)
+            user['word_count'] += word_count
+            user['character_count'] += char_count
+    except TypeError:
+        print(f"TypeError for Message: {message['timestamp_ms']}")
         if message['content'] is not None:
-            print('Error: TimeStamp of {0}'.format(message['timestamp_ms']))
-            print('Message: "{0}"'.format(message['content']))
+            print(f"Message Content: {message['content']}")
         return False
-    except KeyError as e:
-        f = str(e)
-        if 'Matthew' in f or 'David' in f or 'Kearsen' in f:
-            return None
-        print(message['timestamp_ms'])
-        raise (e)
-        if message['sender_name'] not in messenger_chat['missing_members']:
-            print(f"Discovered person who left chat! {message['sender_name']}")
-            messenger_chat['missing_members'].append(message['sender_name'])
+    except KeyError:
+        print(f"KeyError for Message: {message['timestamp_ms']}")
+        if message['content'] is not None:
+            print(f"Message Content: {message['content']}")
         return False
     return True
 
