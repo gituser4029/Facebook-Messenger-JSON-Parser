@@ -74,35 +74,25 @@ def main(messenger_chat):
                 'artyomos/Facebook-Messenger-JSON-Parser)\nVersion 1.1.0\n\n')
 
         # Group Chat Title
-        f.write('Messenger Chat: {0}\n\n'.format(messenger_chat['title']))
+        f.write(f'Messenger Chat: {messenger_chat["title"]}\n\n')
 
         # Stats
-        f.write('Total Messages: {0}\n'.format(
-            messenger_chat['total_messages']))
-        f.write('Word Count: {0}\n'.format(messenger_chat['word_count']))
-        f.write('Character Count: {0}\n'.format(
-            messenger_chat['character_count']))
-        f.write('Images Sent: {0}\n'.format(messenger_chat['image_count']))
-        f.write('Gifs Sent: {0}\n'.format(messenger_chat['gif_count']))
-        f.write('Videos Sent: {0}\n'.format(messenger_chat['video_count']))
-        f.write('Audio Files Sent: {0}\n'.format(
-            messenger_chat['audio_count']))
-        f.write('Links Sent: {0}\n'.format(messenger_chat['link_count']))
-        f.write('Reactions Given: {0}\n'.format(
-            messenger_chat['reaction_count']['given']))
+        f.write(f'Total Messages: {messenger_chat["total_messages"]}\n')
+        f.write(f'Word Count: {messenger_chat["word_count"]}\n')
+        f.write(f'Character Count: {messenger_chat["character_count"]}\n')
+        f.write(f'Images Sent: {messenger_chat["image_count"]}\n')
+        f.write(f'GIFs Sent: {messenger_chat["gif_count"]}\n')
+        f.write(f'Videos Sent: {messenger_chat["video_count"]}\n')
+        f.write(f'Audio Files Sent: {messenger_chat["audio_count"]}\n')
+        f.write(f'Links Sent: {messenger_chat["link_count"]}\n')
+        f.write(f"Reactions Given: {messenger_chat['reaction_count']['given']}\n")
         for reaction in messenger_chat['reaction_count']['reaction_counter']:
-            f.write('\t{0}:{1}'.format(
-                reaction, messenger_chat['reaction_count']['reaction_counter'][reaction]))
-        # TODO Add other section
+            f.write(f"\t{reaction}:{messenger_chat['reaction_count']['reaction_counter'][reaction]}")
+        # TODO Add other section(s)
         f.write('\nThe 50 Most Common Words:\n')
         words = remove_common(messenger_chat['words_counter']).most_common(50)
         for num in range(len(words)):
-            try:
-                f.write('\t{0}. {1} ({2}x)'.format(
-                    num + 1, words[num][0], words[num][1]))
-            except UnicodeEncodeError:
-                f.write('\t{0}. {1} ({2}x)'.format(
-                    num + 1, words[num][0].encode('utf-8'), words[num][1]))
+            f.write(f"\t{num + 1}. {words[num][0]} ({words[num][1]}x)")
 
         # User Stats
         f.write('\n\nStats by Member:')
@@ -114,47 +104,32 @@ def main(messenger_chat):
             # I promise I don't mean them TODO https://pypi.org/project/profanity-check/
             #  regex whatever it is for [*]gga (and exclude ni -   of course)
             print(
-                f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>4} Soft {individual['words_counter']['Nigger']:>4} Hard {individual['words_counter']['Nig']:>4} Cut-off {individual['words_counter']['Niggar']:>4} Weird Format O_o")
+                f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>4} Soft "
+                f"{individual['words_counter']['Nigger']:>4} Hard {individual['words_counter']['Nig']:>4} Cut-off "
+                f"{individual['words_counter']['Niggar']:>4} Weird Format O_o")
 
-            # TODO convert everything to fstring - this old code is before 3.6 added them
             f.write(f'\n\n{user}\n\n')
-            f.write('Total Messages: {0}\n'.format(
-                individual['total_messages']))
-            f.write('Word Count: {0}\n'.format(individual['word_count']))
-            f.write('Character Count: {0}\n'.format(
-                individual['character_count']))
-            f.write('Images Sent: {0}\n'.format(individual['image_count']))
-            f.write('Gifs Sent: {0}\n'.format(individual['gif_count']))
-            f.write('Videos Sent: {0}\n'.format(individual['video_count']))
-            f.write('Audio Files Sent: {0}\n'.format(
-                individual['audio_count']))
-            f.write('Links Sent: {0}\n'.format(individual['link_count']))
-            f.write('Reactions Given: {0}\n'.format(
-                individual['reaction_count']['given']))
-            try:
-                for reaction in individual['reaction_count']['given_counter']:
-                    f.write('\t{0}:{1}'.format(
-                        reaction, individual['reaction_count']['given_counter'][reaction]))
-            except UnicodeEncodeError:
-                f.write('\t{0}:{1}'.format(
-                    reaction.decode('utf-8'), individual['reaction_count']['given_counter'][reaction]))
-            f.write('\nReactions Received: {0}\n'.format(
-                individual['reaction_count']['received']))
+            f.write(f"Total Messages: {individual['total_messages']}\n")
+            f.write(f"Word Count: {individual['word_count']}\n")
+            f.write(f"Character Count: {individual['character_count']}\n")
+            f.write(f"Images Sent: {individual['image_count']}\n")
+            f.write(f"GIFs Sent: {individual['gif_count']}\n")
+            f.write(f"Videos Sent: {individual['video_count']}\n")
+            f.write(f"Audio Files Sent: {individual['audio_count']}\n")
+            f.write(f"Links Sent: {individual['link_count']}\n")
+            f.write(f"Reactions Given: {individual['reaction_count']['given']}\n")
+            for reaction in individual['reaction_count']['given_counter']:
+                f.write(f"\t{reaction}:{individual['reaction_count']['given_counter'][reaction]}")
+            f.write(f"\nReactions Received: {individual['reaction_count']['received']}\n")
             for reaction in individual['reaction_count']['received_counter']:
-                f.write('\t{0}:{1}'.format(
-                    reaction, individual['reaction_count']['received_counter'][reaction]))
-            # TODO Add other section
+                f.write(f"\t{reaction}:{individual['reaction_count']['received_counter'][reaction]}")
+            # TODO Add other section(s)
             f.write('\nThe 25 Most Common Words:\n')
             words = remove_common(individual['words_counter']).most_common(25)
             for num in range(len(words)):
-                try:
-                    f.write('\t{0}. {1} ({2}x)'.format(
-                        num + 1, words[num][0], words[num][1]))
-                except UnicodeEncodeError:
-                    f.write('\t{0}. {1} ({2}x)'.format(
-                        num + 1, words[num][0].encode('utf-8'), words[num][1]))
-    print(
-        'Wrote Results to messenger_stats.txt. Please check that file for details!\n\nThanks for using my program :)!')
+                f.write(f"\t{num + 1}. {words[num][0]} ({words[num][1]}x)")
+    print('Wrote Results to messenger_stats.txt. Please check that file for details!'
+          '\n\nThanks for using my program :)!')
 
 
 def remove_common(counter):
