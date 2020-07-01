@@ -16,13 +16,9 @@ Please see the README.md file for help in running this file.
 
 # TODO check through folder(s) for message.json and potentially other files if can support it
 # TODO nickname check/parse/indication
-# TODO missing member indication(s)
-# TODO fix gif_counts for new messenger format for new(er) chats
 # TODO fix word counts and filtered word list(s)
-# TODO fstring formatting
 # TODO csv formatting :)))
 # TODO graphical / data analysis
-# TODO TODO TODO :P
 
 import json
 from collections import Counter
@@ -77,7 +73,8 @@ def main(messenger_chat):
         f.write(f'Messenger Chat: {messenger_chat["title"]}\n\n')
 
         # Stats
-        f.write(f'Total Messages: {messenger_chat["total_messages"]}\n')
+        f.write(f'Previous Members: {", ".join(messenger_chat["missing_members"]).strip(", ")}')
+        f.write(f'\nTotal Messages: {messenger_chat["total_messages"]}\n')
         f.write(f'Word Count: {messenger_chat["word_count"]}\n')
         f.write(f'Character Count: {messenger_chat["character_count"]}\n')
         f.write(f'Images Sent: {messenger_chat["image_count"]}\n')
