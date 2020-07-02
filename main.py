@@ -186,37 +186,42 @@ def parse_chat(message):
                     message['sender_name'] not in messenger_chat['missing_members']:
                 print(f"Found a missing user! {message['sender_name']}")
                 messenger_chat['missing_members'].append(message['sender_name'])
-            # Catch all for missing users
             user = messenger_chat['members']['unknown_user']
 
+        # Increment User's total messages
         user['total_messages'] += 1
-        words = ''
 
         # Fix messenger problems with Unicode Encoding
         if 'content' in message.keys():
             # messenger has improperly encoded text - needs to be re-encoded
             # and then decoded - I don't want to explain its just annoying
-            # rewrite the file
             words = message['content'].encode('latin1').decode('utf-8')
             message['content'] = words
         else:
+            words = ''
             content = False
 
-        # if X sent X exists 0 content in message, ignore
+        # TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
+        # Checks to see if special events have occurred
+        # Or if X sent X exists 0 content in message
         if 'sent an attachment' in words:
             content = False
         elif 'sent a photo' in words:
             content = False
         elif 'sent a video' in words:
             content = False
-
-        # These checks are to see if special events have occurred (Ex. member add / remove)
-        if 'the group.' in words:
+        elif 'the group.' in words:
             parse_member_changes(message, user)
+            content = False
         elif 'named the group' in words:
             parse_group_changes(message, user)
+            content = False
+        #TODO group photo changes "X changed the group photo." - no real info for this one
+        #TODO chat color changes "You changed the chat colors." - no real info for this one
+        #TODO chat emoji changes "X set the emoji to X."
+        #TODO nickname changes "X set the nickname for X to X."
 
-        # TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
+
 
         if 'share' in message.keys():
             parse_links(message, user)
@@ -288,7 +293,7 @@ def parse_member_changes(message, user):
 
 def parse_group_changes(message, user):
     """
-    Given a message adds to the (global) chat dictionary the additions and changes to users
+    Given a message adds to the (global) chat dictionary the changes to the group name
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
     :param user:dict Dictionary of the user in the chat
     """
@@ -476,4 +481,6 @@ messenger_chat = {
     'user_remove': 0,
 }
 
+# import cProfile
+# cProfile.run('main(messenger_chat)')
 main(messenger_chat)
