@@ -73,8 +73,11 @@ def main(messenger_chat):
         f.write(f'Messenger Chat: {messenger_chat["title"]}\n\n')
 
         # Stats
-        f.write(f'Previous Members: {", ".join(messenger_chat["missing_members"]).strip(", ")}')
-        f.write(f'\nTotal Messages: {messenger_chat["total_messages"]}\n')
+        f.write(f'Previous Members: {", ".join(messenger_chat["missing_members"]).strip(", ")}\n')
+        f.write(f'Member Changes (Additions/Subtractions: {messenger_chat["user_add"]}'
+                f'/{messenger_chat["user_remove"]})\n')
+        f.write(f"Name Change Count: {messenger_chat['name_change_count']}x\n")
+        f.write(f'Total Messages: {messenger_chat["total_messages"]}\n')
         f.write(f'Word Count: {messenger_chat["word_count"]}\n')
         f.write(f'Character Count: {messenger_chat["character_count"]}\n')
         f.write(f'Images Sent: {messenger_chat["image_count"]}\n')
@@ -91,6 +94,14 @@ def main(messenger_chat):
         for num in range(len(words)):
             f.write(f"\t{num + 1}. {words[num][0]} ({words[num][1]}x)")
 
+        # Write Name changes the group experienced
+        f.write(f'\n\nChanges in name to {messenger_chat["title"]} '
+                f'(Ordered by date of last change reverse chronological)\n')
+        num = 0
+        for name in messenger_chat['name_changes'].items():
+            num += 1
+            f.write(f"\t{num}. {name[0]} ({name[1]}x)")
+
         # User Stats
         f.write('\n\nStats by Member:')
         print('N-Word Count(s)! Lets see if you are being naughty!! >:(')
@@ -102,7 +113,7 @@ def main(messenger_chat):
 
             # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them,
             # I promise I don't mean them TODO https://pypi.org/project/profanity-check/
-            #  regex whatever it is for [*]gga (and exclude ni -   of course)
+            # TODO regex whatever it is for [*]gga (and exclude ni -   of course) so I don't have any n-words in code
             print(
                 f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>4} Soft "
                 f"{individual['words_counter']['Nigger']:>4} Hard {individual['words_counter']['Nig']:>4} Cut-off "
@@ -166,7 +177,7 @@ def parse_chat(message):
         # Assume content exists, attempt to get user and increment his message count
         content = True
 
-        # If user doesn't exist, use placeholder user 'missing'
+        # If user doesn't exist, use placeholder user 'unknown_user'
         try:
             user = messenger_chat['members'][message['sender_name']]
         except KeyError:
@@ -181,12 +192,13 @@ def parse_chat(message):
         user['total_messages'] += 1
         words = ''
 
-        # TODO I don't think this works
         # Fix messenger problems with Unicode Encoding
         if 'content' in message.keys():
             # messenger has improperly encoded text - needs to be re-encoded
             # and then decoded - I don't want to explain its just annoying
+            # rewrite the file
             words = message['content'].encode('latin1').decode('utf-8')
+            message['content'] = words
         else:
             content = False
 
@@ -197,6 +209,12 @@ def parse_chat(message):
             content = False
         elif 'sent a video' in words:
             content = False
+
+        # These checks are to see if special events have occurred (Ex. member add / remove)
+        if 'the group.' in words:
+            parse_member_changes(message, user)
+        elif 'named the group' in words:
+            parse_group_changes(message, user)
 
         # TODO use these 'sent X' to determine previous nicknames in chat (as well as likely time it changed)
 
@@ -234,6 +252,55 @@ def parse_chat(message):
         #     print(f"Message Content: {message['content']}")
         return False
     return True
+
+
+def parse_member_changes(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the additions and changes to users
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:dict Dictionary of the user in the chat
+    """
+
+    # Checks to ensure message truly is changing users (either additions or removals)
+    if 'users' not in message.keys():
+        return None
+    if message['type'] == 'Subscribe':
+        add = True
+    else:
+        add = False
+
+    # Adds to counters the amount of times user X was added / removed
+    # TODO indicate in file time of user addition/removal and who did it
+    for user in message['users']:
+        # print(f'User Status Change: {user["name"]} Add: {add}')
+        if user['name'] not in messenger_chat['members'] and \
+                user['name'] not in messenger_chat['missing_members']:
+            print(f"Found a missing user! {user['name']}")
+            messenger_chat['missing_members'].append(user['name'])
+
+        if add:
+            messenger_chat['user_add'] += 1
+            messenger_chat['user_additions'].update(user)
+        else:
+            messenger_chat['user_remove'] += 1
+            messenger_chat['user_removals'].update(user)
+
+
+def parse_group_changes(message, user):
+    """
+    Given a message adds to the (global) chat dictionary the additions and changes to users
+    :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
+    :param user:dict Dictionary of the user in the chat
+    """
+
+    name_change = message['content'].split('the group')[1].strip('.').strip()
+    messenger_chat['name_changes'][name_change] += 1
+    # name_change = f"{message['sender_name']:>20} changed the group name to {name_change.encode('latin1').decode('utf-8')}"
+    # print(name_change)
+
+    # Adds to counters the amount of times group was changed
+    # TODO indicate in file time of group change and who did it
+    messenger_chat['name_change_count'] += 1
 
 
 def parse_reactions(message, user):
@@ -379,6 +446,8 @@ def parse_participants(participant_list):
 messenger_chat = {
     'title': '',
     'total_messages': 0,
+    'name_changes': Counter(),
+    'name_change_count': 0,
     'word_count': 0,
     'character_count': 0,
     'image_count': 0,
@@ -401,6 +470,10 @@ messenger_chat = {
     'words_counter': Counter(),
     'members': {},
     'missing_members': [],
+    'user_additions': Counter(),
+    'user_removals': Counter(),
+    'user_add': 0,
+    'user_remove': 0,
 }
 
 main(messenger_chat)
