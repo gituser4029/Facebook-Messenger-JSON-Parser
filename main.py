@@ -95,6 +95,9 @@ def main(messenger_chat):
         f.write('\n\nStats by Member:')
         print('N-Word Count(s)! Lets see if you are being naughty!! >:(')
         for user in messenger_chat['members']:
+            # Skip the catch-all missing user
+            if user == 'unknown_user':
+                continue
             individual = messenger_chat['members'][user]
 
             # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them,
@@ -125,6 +128,7 @@ def main(messenger_chat):
             words = remove_common(individual['words_counter']).most_common(25)
             for num in range(len(words)):
                 f.write(f"\t{num + 1}. {words[num][0]} ({words[num][1]}x)")
+
     print('Wrote Results to messenger_stats.txt. Please check that file for details!'
           '\n\nThanks for using my program :)!')
 
@@ -161,10 +165,23 @@ def parse_chat(message):
     try:
         # Assume content exists, attempt to get user and increment his message count
         content = True
-        user = messenger_chat['members'][message['sender_name']]
+
+        # If user doesn't exist, use placeholder user 'missing'
+        try:
+            user = messenger_chat['members'][message['sender_name']]
+        except KeyError:
+            # Skip Missing Members if already found
+            if message['sender_name'] not in messenger_chat['members'] and \
+                    message['sender_name'] not in messenger_chat['missing_members']:
+                print(f"Found a missing user! {message['sender_name']}")
+                messenger_chat['missing_members'].append(message['sender_name'])
+            # Catch all for missing users
+            user = messenger_chat['members']['unknown_user']
+
         user['total_messages'] += 1
         words = ''
 
+        # TODO I don't think this works
         # Fix messenger problems with Unicode Encoding
         if 'content' in message.keys():
             # messenger has improperly encoded text - needs to be re-encoded
@@ -211,13 +228,6 @@ def parse_chat(message):
             print(f"Message Content: {message['content']}")
         return False
     except KeyError:
-        # Skip Missing Members if already found
-        if message['sender_name'] not in messenger_chat['members'] and message['sender_name'] not in messenger_chat[
-            'missing_members']:
-            print(f"Found a missing user! {message['sender_name']}")
-            messenger_chat['missing_members'].append(message['sender_name'])
-        else:
-            return False
         # Otherwise describe the problem to console
         print(f"KeyError for Message: {message['timestamp_ms']}")
         # if 'content' in message.keys():
@@ -230,7 +240,7 @@ def parse_reactions(message, user):
     """
     Given a message adds to the (global) chat dictionary the reactions given and received by the user
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
-    :param user:string String Indicating User ID / Name of the user in the chat
+    :param user:dict Dictionary of the user in the chat
     """
     reactions = message['reactions']
     messenger_chat['reaction_count']['given'] += len(reactions)
@@ -252,7 +262,7 @@ def parse_photos(message, user):
     """
     Given a message adds to the (global) chat dictionary the photos sent by the user
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
-    :param user:string String Indicating User ID / Name of the user in the chat
+    :param user:dict Dictionary of the user in the chat
     """
     for image in message['photos']:
         image_check = image['uri']
@@ -268,7 +278,7 @@ def parse_videos(message, user):
     """
     Given a message adds to the (global) chat dictionary the videos sent by the user
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
-    :param user:string String Indicating User ID / Name of the user in the chat
+    :param user:dict Dictionary of the user in the chat
     """
     for video in message['videos']:
         # TODO Potentially create a list of sent video files and where to find it
@@ -281,7 +291,7 @@ def parse_audio(message, user):
     """
     Given a message adds to the (global) chat dictionary the audio files sent by the user
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
-    :param user:string String Indicating User ID / Name of the user in the chat
+    :param user:dict Dictionary of the user in the chat
     """
     for audio in message['audio_files']:
         # TODO Potentially create a list of sent audio files and where to find it
@@ -294,7 +304,7 @@ def parse_links(message, user):
     """
     Given a message adds to the (global) chat dictionary the links sent by the user
     :param message:dict Dictionary containing information on a message (Author, Message, Photos, Videos, etc.)
-    :param user:string String Indicating User ID / Name of the user in the chat
+    :param user:dict Dictionary of the user in the chat
     """
     try:
         links = message['share']['link']
@@ -338,6 +348,31 @@ def parse_participants(participant_list):
             },
             'words_counter': Counter(),
         }
+    # Finally, add a catch-all missing user
+    messenger_chat['members']['unknown_user'] = {
+        'total_messages': 0,
+        'word_count': 0,
+        'character_count': 0,
+        'image_count': 0,
+        'gif_count': 0,
+        'video_count': 0,
+        'audio_count': 0,
+        'link_count': 0,
+        'reaction_count': {
+            'given': 0,
+            'received': 0,
+            'given_counter': Counter(),
+            'received_counter': Counter(),
+        },
+        'other': {
+            'like_usage': 0,
+            'emoji_usage': 0,
+            'emoji_counter': Counter(),
+            'sticker_usage': 0,
+            'sticker_counter': Counter(),
+        },
+        'words_counter': Counter(),
+    }
 
 
 # Dictionary containing everything about the chat
