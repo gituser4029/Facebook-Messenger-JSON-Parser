@@ -1,4 +1,4 @@
-''' Facebook Messenger Chat Parser Version 1.1.0 - Designed on 06.30.20 by
+""" Facebook Messenger Chat Parser Version 1.1.0 - Designed on 06.30.20 by
  /$$   /$$             /$$                     /$$$$$$$                                                      /$$
 | $$$ | $$            | $$                    | $$__  $$                                                    | $$
 | $$$$| $$  /$$$$$$  /$$$$$$    /$$$$$$       | $$  \ $$ /$$   /$$  /$$$$$$   /$$$$$$   /$$$$$$   /$$$$$$  /$$$$$$
@@ -12,13 +12,14 @@
                                                                   |__/      |__/
 
 Please see the README.md file for help in running this file.
-'''
+"""
 
 # TODO check through folder(s) for message.json and potentially other files if can support it
 # TODO nickname check/parse/indication
 # TODO fix word counts and filtered word list(s)
 # TODO csv formatting :)))
 # TODO graphical / data analysis
+# TODO TypeString documentation on each variable important
 
 import json
 from collections import Counter
@@ -180,14 +181,14 @@ def parse_chat(message):
 
         # If user doesn't exist, use placeholder user 'unknown_user'
         try:
-            user = messenger_chat['members'][message['sender_name']]
+            user: dict = messenger_chat['members'][message['sender_name']]
         except KeyError:
             # Skip Missing Members if already found
             if message['sender_name'] not in messenger_chat['members'] and \
                     message['sender_name'] not in messenger_chat['missing_members']:
                 print(f"Found a missing user! {message['sender_name']}")
                 messenger_chat['missing_members'].append(message['sender_name'])
-            user = messenger_chat['members']['unknown_user']
+            user: dict = messenger_chat['members']['unknown_user']
 
         # Increment User's total messages
         user['total_messages'] += 1
@@ -217,12 +218,10 @@ def parse_chat(message):
         elif 'named the group' in words:
             parse_group_changes(message, user)
             content = False
-        #TODO group photo changes "X changed the group photo." - no real info for this one
-        #TODO chat color changes "You changed the chat colors." - no real info for this one
-        #TODO chat emoji changes "X set the emoji to X."
-        #TODO nickname changes "X set the nickname for X to X."
-
-
+        # TODO group photo changes "X changed the group photo." - no real info for this one
+        # TODO chat color changes "You changed the chat colors." - no real info for this one
+        # TODO chat emoji changes "X set the emoji to X."
+        # TODO nickname changes "X set the nickname for X to X."
 
         if 'share' in message.keys():
             parse_links(message, user)
