@@ -155,14 +155,15 @@ def remove_common(counter):
     # with open('google-10000-english.txt') as f:
     #    common_words = list(map(str.strip, f.readlines()))
     #    print(common_words)
-
+    # TODO reimplement proper word filtering
     # Extra list to include any other words you would like to filter
     extra_exceptions = ['I\'m', 'It\'s', 'Don\'t', 'That\'s', 'Should', 'About']
-    with open('google-10000-english-usa-no-swears-short.txt') as f:
-        common_words = list(map(str.strip, f.readlines())) + extra_exceptions
-        # print(common_words)
-        for word in common_words:
-            del counter[word.capitalize()]
+    # with open('google-10000-english-usa-no-swears-short.txt') as f:
+    #     common_words = list(map(str.strip, f.readlines())) + extra_exceptions
+    common_words = extra_exceptions
+    # print(common_words)
+    for word in common_words:
+        del counter[word.capitalize()]
     return counter
 
 
