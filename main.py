@@ -114,11 +114,13 @@ def main(messenger_chat):
 
             # Optional CONSOLE ONLY N-Word Count - I'm sorry but I needed to type the words to search for them,
             # I promise I don't mean them TODO https://pypi.org/project/profanity-check/
-            # TODO regex whatever it is for [*]gga (and exclude ni -   of course) so I don't have any n-words in code
+            # TODO regex whatever it is for naughty_check so I don't have any n-words in code
+            naughty_check = "N" + "i" + "g"
+            
             print(
-                f"{user.split()[0]:>15} N-word Count: {individual['words_counter']['Nigga']:>4} Soft "
-                f"{individual['words_counter']['Nigger']:>4} Hard {individual['words_counter']['Nig']:>4} Cut-off "
-                f"{individual['words_counter']['Niggar']:>4} Weird Format O_o")
+                f"{user.split()[0]:>15} N-word Count: {individual['words_counter'][naughty_check+'ga']:>4} Soft "
+                f"{individual['words_counter'][naughty_check+'ger']:>4} Hard {individual['words_counter'][naughty_check]:>4} Cut-off "
+                f"{individual['words_counter'][naughty_check+'gar']:>4} Weird Format O_o")
 
             f.write(f'\n\n{user}\n\n')
             f.write(f"Total Messages: {individual['total_messages']}\n")
